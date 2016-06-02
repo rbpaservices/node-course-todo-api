@@ -1,5 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var _ = require('underscore');
+
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -8,40 +10,6 @@ var nextTodoId = 1;
 
 var todos = [];	
 
-
-
-function getTodoItem(todoParam){
-
-	 return new Promise(function(resolve, reject){
-
-		 	if(typeof todoParam != 'string') {
-		 		 
- 				reject('Bad Todo Item');
- 			} else {
-
- 			 		for (var i = todos.length - 1; i >= 0; i--) {
-		
-		 				 
-
-						if (todos[i].id.toString() === todoParam) {
-							 
-							foundItem = todos[i];
- 			 
-						}
-					}
-
-					if (foundItem.id.toString() === todoParam) {
-						console.log('resolve')
-						resolve(foundItem);
-					} else {
-						console.log('reject')
-					
-						reject('Todo Item Not found');
-					}
-				}
-
-	})
-}
 
 
 app.use(bodyParser.json());
@@ -55,20 +23,13 @@ app.get('/todos', function(req, res){
 });
 
 app.get('/todos/:id', function(req, res){
-	var todoParam = req.params.id;
-	
+	var todoParam = parseInt(req.params.id, 10);
+	var matchedTodo = _.findWhere(todos, {id: todoParam})
 
-	try { 
-	getTodoItem(todoParam);
-
-		if(foundItem.id.toString() === todoParam) {	
-	 		res.send('Requested todo item # ' + foundItem.id + '.')
- 		} else {
- 			 
- 			res.status(404).send('Requested Todo Item Not Found');
- 		}
-	}catch (e) {
-		res.status(404).send(e);
+	if (matchedTodo) {
+		res.json(matchedTodo);
+	} else {
+		res.status(404).send();
 	}
 	
 });
@@ -76,12 +37,18 @@ app.get('/todos/:id', function(req, res){
 app.post('/todos', function(req, res) {
 	var body = req.body;
 	 
-		body.id = nextTodoId;
-	  	nextTodoId ++;
+	 if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0){
 
-	  	todos.push(body);
-			
-	res.json(todos);
+	 	return res.status(400).send();
+	 }  else {
+		 	 body = _.pick(body, 'description', 'completed' );
+		 	 body.description = body.description.trim();	
+			body.id = nextTodoId++;
+			  	
+			todos.push(body);
+					
+			res.json(todos);
+	 }
 })
 
 app.listen(PORT, function() {
