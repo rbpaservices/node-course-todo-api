@@ -37,11 +37,13 @@ app.get('/todos', function(req, res){
 			}
 	}
 
-	if (queryParams.hasOwnProperty('description') ){
+	if (queryParams.hasOwnProperty('q') ){
 
-			if (_.isString(queryParams.description) && queryParams.description.trim().length > 0){
+			if (_.isString(queryParams.q) && queryParams.q.trim().length > 0){
 				
-				filteredTodos =_.where(filteredTodos, {description: queryParams.description});
+				filteredTodos =_.filter(filteredTodos,  function(todo){
+					return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+				});
 			} 
 	}
 
